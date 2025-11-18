@@ -1,304 +1,264 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NeRF Project</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CS180 Project 4 — Neural Radiance Fields</title>
 
 <style>
-/* ============================================================
-                     DARK THEME GLOBAL STYLE
-   ============================================================ */
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background-color: #0e0e0e;
+        color: #e6e6e6;
+        line-height: 1.6;
+    }
 
-:root {
-    --bg: #0d1117;
-    --bg-light: #161b22;
-    --bg-lighter: #1f242c;
-    --text: #e6edf3;
-    --text-soft: #9ba4b0;
-    --accent: #58a6ff;
-    --border: #30363d;
-}
+    /* Sticky Navbar */
+    nav {
+        position: sticky;
+        top: 0;
+        background: #111;
+        padding: 15px;
+        z-index: 1000;
+        border-bottom: 1px solid #333;
+    }
 
-body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-}
+    nav a {
+        color: #e6e6e6;
+        margin-right: 20px;
+        text-decoration: none;
+        font-weight: bold;
+    }
 
-/* ============================================================
-                            NAVBAR
-   ============================================================ */
+    nav a:hover {
+        color: #4da3ff;
+    }
 
-.navbar {
-    width: 100%;
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    background: var(--bg-light);
-    color: var(--text);
-    padding: 18px 0;
-    text-align: center;
-    font-size: 26px;
-    font-weight: 700;
-    border-bottom: 1px solid var(--border);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.35);
-}
+    section {
+        max-width: 900px;
+        margin: auto;
+        padding: 60px 20px;
+        border-bottom: 1px solid #222;
+    }
 
-/* ============================================================
-                            LAYOUT
-   ============================================================ */
+    h1, h2, h3 {
+        color: #4da3ff;
+    }
 
-.container {
-    display: flex;
-    max-width: 1400px;
-    margin: auto;
-    padding: 20px;
-}
-
-.sidebar {
-    width: 240px;
-    padding-right: 30px;
-    position: sticky;
-    top: 80px;
-    height: max-content;
-    font-size: 14px;
-}
-
-.sidebar a {
-    display: block;
-    padding: 6px 0;
-    color: var(--text-soft);
-}
-
-.sidebar a:hover {
-    color: var(--accent);
-}
-
-.sidebar-section-title {
-    margin-top: 25px;
-    font-weight: 700;
-    color: var(--text);
-}
-
-/* ============================================================
-                            CONTENT
-   ============================================================ */
-
-.content {
-    flex-grow: 1;
-    background: var(--bg-light);
-    padding: 40px 50px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-    border: 1px solid var(--border);
-}
-
-.section {
-    margin-bottom: 55px;
-}
-
-.section-title {
-    font-size: 26px;
-    margin-bottom: 10px;
-    color: var(--accent);
-}
-
-.section-subtitle {
-    font-size: 19px;
-    margin-bottom: 10px;
-    color: var(--text-soft);
-}
-
-p {
-    color: var(--text);
-    line-height: 1.65;
-}
-
-.text-box {
-    background: var(--bg-lighter);
-    padding: 18px 22px;
-    border-radius: 8px;
-    margin: 20px 0;
-    line-height: 1.6;
-    border: 1px solid var(--border);
-}
-
-/* ============================================================
-                            IMAGES
-   ============================================================ */
-
-.image-full {
-    width: 100%;
-    border-radius: 10px;
-    margin: 20px 0;
-    border: 1px solid var(--border);
-}
-
-.image-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
-}
-
-.image-grid img {
-    width: 100%;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-}
-
-/* ============================================================
-                            FOOTER
-   ============================================================ */
-
-.footer {
-    text-align: center;
-    padding: 35px 0;
-    color: var(--text-soft);
-    margin-top: 40px;
-    font-size: 14px;
-}
-
+    .image-container {
+        width: 100%;
+        height: 300px;
+        border: 1px dashed #555;
+        margin: 20px 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #777;
+        font-size: 14px;
+        background: #1a1a1a;
+    }
 </style>
 </head>
 
 <body>
 
-<div class="navbar">Neural Radiance Field Project</div>
+<nav>
+    <a href="#intro">Home</a>
+    <a href="#part0">Part 0</a>
+    <a href="#part1">Part 1</a>
+    <a href="#part2">Part 2</a>
+</nav>
 
-<div class="container">
+<!-- INTRO -->
+<section id="intro">
+    <h1>CS180 Project 4 — Neural Radiance Fields</h1>
 
-    <!-- ============================================================
-                         SIDEBAR
-    ============================================================ -->
+    <div class="image-container">PLACE INTRO BANNER IMAGE HERE</div>
 
-    <div class="sidebar">
+    <p>
+        This project explores Neural Radiance Fields (NeRF) by implementing the pipeline from scratch. 
+        Starting with camera calibration and 3D reconstruction, I built up to coordinate-based neural networks, 
+        volumetric rendering, and multi-view reconstruction.  
+        I tested the approach on standard datasets and my own captured scene.
+    </p>
+</section>
 
-        <div class="sidebar-section-title">Part 0: Camera Calibration</div>
-        <a href="#0-1">0.1 Calibrating Your Camera</a>
-        <a href="#0-2">0.2 3D Object Scan</a>
-        <a href="#0-3">0.3 Estimating Camera Pose</a>
-        <a href="#0-4">0.4 Undistorting & Dataset</a>
+<!-- PART 0 -->
+<section id="part0">
+    <h1>Part 0 — Camera Calibration & 3D Capture</h1>
 
-        <div class="sidebar-section-title">Part 1: 2D Neural Field</div>
-        <a href="#1-1">2D MLP Fit</a>
-        <a href="#1-2">Training Curves</a>
-        <a href="#1-3">Hyperparameter Sweep</a>
+    <h2>0.1 Camera Calibration</h2>
+    <div class="image-container">INSERT CHECKERBOARD IMAGES HERE</div>
 
-        <div class="sidebar-section-title">Part 2: Full NeRF</div>
-        <a href="#2-1">Rays From Cameras</a>
-        <a href="#2-2">Sampling</a>
-        <a href="#2-3">Dataloading</a>
-        <a href="#2-4">NeRF Network</a>
-        <a href="#2-5">Volume Rendering</a>
-        <a href="#2-6">Training With My Data</a>
+    <p>
+        I calibrated my camera using a printed ArUco checkerboard. By capturing images from multiple angles, 
+        I estimated the intrinsic matrix (fx, fy, cx, cy) and distortion coefficients.  
+        These parameters are essential for reconstructing accurate camera rays in later sections.
+    </p>
 
-    </div>
+    <div class="image-container">INSERT INTRINSICS.JSON SCREENSHOT HERE</div>
 
-    <!-- ============================================================
-                         MAIN CONTENT
-    ============================================================ -->
 
-    <div class="content">
+    <h2>0.2 Capturing a 3D Object Scene</h2>
+    <div class="image-container">INSERT SAMPLE SCENE IMAGES HERE</div>
 
-        <h1 style="color: var(--text);">Neural Radiance Field (NeRF) Project</h1>
-        <p>This page documents my entire NeRF pipeline, from camera calibration to neural rendering, following the CS180 Project 4 structure.</p>
+    <p>
+        I captured a 360° video around an object with stable lighting and minimal motion blur.  
+        Consistent parallax across frames is critical for successful structure-from-motion in COLMAP.
+    </p>
 
-        <!-- ==================== PART 0 ==================== -->
 
-        <div class="section" id="0-1">
-            <h2 class="section-title">Part 0.1 — Calibrating Your Camera</h2>
-            <p>I captured checkerboard images and used OpenCV to compute intrinsic parameters and lens distortion coefficients.</p>
-            <img class="image-full" src="INSERT_CALIBRATION_IMAGE">
-        </div>
+    <h2>0.3 COLMAP Pose Estimation</h2>
+    <div class="image-container">INSERT COLMAP SPARSE CLOUD HERE</div>
+    <div class="image-container">INSERT CAMERA FRUSTUM VISUALIZATION HERE</div>
 
-        <div class="section" id="0-2">
-            <h2 class="section-title">Part 0.2 — Capturing a 3D Scan</h2>
-            <p>I recorded a smooth rotation around the object to generate consistent multi-view observations.</p>
-            <img class="image-full" src="INSERT_SCAN_IMAGE">
-        </div>
+    <p>
+        Using COLMAP’s feature extractor, matcher, and bundle adjustment steps, I reconstructed a sparse point cloud.  
+        This yields the camera extrinsic matrices (rotation + translation) for each image, defining how the scene is viewed.
+    </p>
 
-        <div class="section" id="0-3">
-            <h2 class="section-title">Part 0.3 — Estimating Camera Pose</h2>
-            <p>COLMAP recovered camera poses and a sparse reconstruction. The frustum visualization confirms the geometry is stable.</p>
-            <img class="image-full" src="INSERT_FRUSTUM_IMAGE">
-        </div>
 
-        <div class="section" id="0-4">
-            <h2 class="section-title">Part 0.4 — Undistorting & Preparing Dataset</h2>
-            <p>I exported undistorted images and constructed the dataset format needed for NeRF training.</p>
-        </div>
+    <h2>0.4 Dataset Undistortion</h2>
+    <div class="image-container">INSERT ORIGINAL VS UNDISTORTED IMAGE HERE</div>
 
-        <!-- ==================== PART 1 ==================== -->
+    <p>
+        After reconstruction, I exported undistorted images and generated a <code>transforms.json</code> 
+        compatible with NeRF-style rendering pipelines. This cleans the dataset and ensures geometric consistency.
+    </p>
 
-        <div class="section" id="1-1">
-            <h2 class="section-title">Part 1 — Fit a Neural Field to a 2D Image</h2>
-            <p>I trained a small MLP to memorize an image by mapping coordinates to RGB values.</p>
+    <div class="image-container">INSERT DATASET FOLDER SCREENSHOT HERE</div>
+</section>
 
-            <div class="text-box">
-                <strong>Training setup:</strong><br>
-                • Adam optimizer, MSE loss<br>
-                • 2000 iterations<br>
-                • Positional encoding L=10<br>
-            </div>
 
-            <img class="image-full" src="INSERT_2D_RESULT">
-        </div>
+<!-- PART 1 -->
+<section id="part1">
+    <h1>Part 1 — 2D Neural Fields</h1>
 
-        <div class="section" id="1-2">
-            <h3 class="section-subtitle">Training Curves</h3>
-            <img class="image-full" src="INSERT_LOSS_CURVE">
-        </div>
+    <h2>1.1 Model Architecture</h2>
+    <div class="image-container">INSERT MLP DIAGRAM OR HYPERPARAMETER TABLE HERE</div>
 
-        <div class="section" id="1-3">
-            <h3 class="section-subtitle">Hyperparameter Sweep</h3>
-            <div class="image-grid">
-                <img src="INSERT_HPARAM1">
-                <img src="INSERT_HPARAM2">
-                <img src="INSERT_HPARAM3">
-            </div>
-        </div>
+    <p>
+        I trained a coordinate-based MLP that maps 2D coordinates to RGB values.  
+        With positional encoding, the model learns high-frequency details and reconstructs an entire image 
+        as a continuous mathematical function.
+    </p>
 
-        <!-- ==================== PART 2 ==================== -->
 
-        <div class="section" id="2-1">
-            <h2 class="section-title">Part 2.1 — Create Rays From Cameras</h2>
-            <p>I converted every pixel into a world-space ray using camera intrinsics + extrinsics.</p>
-        </div>
+    <h2>1.2 Reconstruction Results</h2>
 
-        <div class="section" id="2-2">
-            <h2 class="section-title">Part 2.2 — Sampling</h2>
-            <p>I sampled points along each ray between near and far bounds.</p>
-        </div>
+    <h3>Fox Scene</h3>
+    <div class="image-container">INSERT ORIGINAL FOX IMAGE</div>
+    <div class="image-container">INSERT RECONSTRUCTED FOX IMAGE</div>
 
-        <div class="section" id="2-3">
-            <h2 class="section-title">Part 2.3 — Dataloading</h2>
-            <p>I packed all ray bundles efficiently and indexed mini-batches during training.</p>
-        </div>
+    <h3>Golden Gate</h3>
+    <div class="image-container">INSERT ORIGINAL GOLDEN GATE IMAGE</div>
+    <div class="image-container">INSERT RECONSTRUCTED GOLDEN GATE IMAGE</div>
 
-        <div class="section" id="2-4">
-            <h2 class="section-title">Part 2.4 — NeRF Network</h2>
-            <p>I implemented the NeRF architecture (coarse + fine models) with positional encoding.</p>
-        </div>
+    <p>
+        The model learns coarse shapes first and refines them progressively, eventually matching the ground truth almost perfectly.
+    </p>
 
-        <div class="section" id="2-5">
-            <h2 class="section-title">Part 2.5 — Volume Rendering</h2>
-            <p>I used alpha compositing to accumulate colors and densities into pixel intensities.</p>
-        </div>
 
-        <div class="section" id="2-6">
-            <h2 class="section-title">Part 2.6 — Training With My Dataset</h2>
-            <div class="text-box">
-                I attempted to train a NeRF with Nerfstudio but encountered compatibility issues (COLMAP GPU flags on macOS).  
-                I completed all preprocessing steps, including dataset and transforms.json.
-            </div>
-        </div>
+    <h2>1.3 Training Progress</h2>
+    <div class="image-container">INSERT INTERMEDIATE FOX OUTPUTS</div>
+    <div class="image-container">INSERT INTERMEDIATE GOLDEN GATE OUTPUTS</div>
 
-    </div>
-</div>
+    <p>
+        Early iterations produce blurry reconstructions, which gradually sharpen as the positional encoding layers 
+        inject high-frequency features into the MLP.
+    </p>
 
-<div class="footer">© 2025 — Project 4 NeRF Submission</div>
+
+    <h2>1.4 Positional Encoding Sweep</h2>
+    <div class="image-container">INSERT FREQUENCY SWEEP COMPARISON</div>
+    <div class="image-container">INSERT WIDTH SWEEP COMPARISON</div>
+
+    <p>
+        Increasing the number of frequency bands improves detail but risks overfitting.  
+        Wider networks generally improve PSNR but with diminishing returns.
+    </p>
+
+
+    <h2>1.5 PSNR Curves</h2>
+    <div class="image-container">INSERT FOX PSNR CURVE</div>
+    <div class="image-container">INSERT GOLDEN GATE PSNR CURVE</div>
+
+    <p>
+        The model rapidly increases in accuracy during early iterations before plateauing near convergence.
+    </p>
+
+</section>
+
+
+<!-- PART 2 -->
+<section id="part2">
+    <h1>Part 2 — 3D Neural Radiance Field</h1>
+
+    <h2>2.1 Ray Generation</h2>
+    <div class="image-container">INSERT RAY VISUALIZATION HERE</div>
+
+    <p>
+        I built utilities to convert pixel coordinates into 3D rays using camera intrinsics and extrinsics.  
+        Each ray originates at the camera center and passes through a pixel, forming the basis of volumetric rendering.
+    </p>
+
+
+    <h2>2.2 Sampling Along Rays</h2>
+    <div class="image-container">INSERT SAMPLING DIAGRAM HERE</div>
+
+    <p>
+        I drew 64 sample points uniformly or with stratified jitter along each ray.  
+        These points are inputs to the NeRF MLP, where density and color are predicted.
+    </p>
+
+
+    <h2>2.3 Dataset Loading</h2>
+    <div class="image-container">INSERT RAY-BATCH DIAGRAM HERE</div>
+
+    <p>
+        Rays, sample points, and ground-truth RGB values were precomputed and cached for efficient training.  
+        This removes redundant per-iteration computation.
+    </p>
+
+
+    <h2>2.4 Neural Field Model</h2>
+    <div class="image-container">INSERT NERF MLP DIAGRAM HERE</div>
+
+    <p>
+        The NeRF network predicts both density and color for each 3D point.  
+        I used an 8-layer architecture with positional encoding and a skip connection, following the original paper.
+    </p>
+
+
+    <h2>2.5 Volume Rendering</h2>
+    <div class="image-container">INSERT VOLUME RENDERING FORMULA DIAGRAM HERE</div>
+
+    <p>
+        Using the classical volume rendering equation, I accumulated alpha and color contributions along each ray.  
+        This creates realistic occlusion and soft transparency artifacts characteristic of NeRF.
+    </p>
+
+
+    <h2>2.6 Final: Training My NeRF Dataset</h2>
+
+    <div class="image-container">INSERT 2–3 DATASET IMAGES HERE</div>
+    <div class="image-container">INSERT TRANSFORMS.JSON SCREENSHOT HERE</div>
+
+    <p>
+        I attempted to train a NeRF with Nerfstudio using my captured dataset.  
+        Although the data preparation pipeline succeeded, I encountered compatibility issues on macOS 
+        (COLMAP GPU flags and ffmpeg).  
+        Due to environment limitations, I was unable to complete full NeRF training.  
+        However, I include:
+        <ul>
+            <li>All captured images</li>
+            <li>The generated <code>transforms.json</code></li>
+            <li>The prepared dataset folder</li>
+        </ul>
+    </p>
+
+</section>
 
 </body>
 </html>
