@@ -332,21 +332,23 @@
 
       <div class="card two-column">
         <div>
-          <p class="pill-heading">Model & Training Setup</p>
+          <p class="pill-heading">Model &amp; Training Setup</p>
           <h3>MLP Architecture</h3>
           <p style="color: var(--muted);">
-            The model uses sinusoidal positional encoding followed by a 4-layer MLP
-            with width 256, outputting RGB through a sigmoid.
+            My 2D neural field is a fully-connected MLP that takes in sinusoidally encoded
+            (x, y) pixel coordinates and predicts normalized RGB colors. Before encoding,
+            I normalize pixel coordinates by dividing x by the image width and y by the image
+            height so they lie in the range [0, 1]. Similarly, input RGB values are normalized
+            to [0, 1] to stabilize optimization.
           </p>
           <ul>
-            <li>Positional encoding L = 10</li>
-            <li>Width = 256</li>
-            <li>4 hidden layers (ReLU)</li>
-            <li>Training steps = 2000</li>
-            <li>Batch size = 10,000 pixels</li>
-            <li>Loss = MSE, Metric = PSNR</li>
+            <li>Input: 2D pixel coordinate with positional encoding (L = 10).</li>
+            <li>Hidden layers: 4 fully-connected layers with ReLU activations.</li>
+            <li>Hidden width: 256 channels per layer.</li>
+            <li>Output layer: 3 channels with sigmoid to clamp colors to [0, 1].</li>
           </ul>
         </div>
+
 
         <div class="card-subtle">
           <p class="pill-heading">Input Images</p>
