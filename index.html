@@ -81,7 +81,6 @@
       box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.15);
     }
 
-    /* Layout helpers */
     section {
       margin-bottom: 40px;
     }
@@ -141,7 +140,6 @@
       font-size: 0.95rem;
     }
 
-    /* Image layouts */
     .image-row {
       display: flex;
       flex-wrap: wrap;
@@ -169,39 +167,11 @@
       color: var(--muted);
     }
 
-    .grid-2x2 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 14px;
-      margin-top: 14px;
-    }
-
-    .thumb {
-      border-radius: var(--radius-sm);
-      border: 1px solid rgba(148, 163, 184, 0.3);
-      overflow: hidden;
-      background: #020617;
-    }
-    .thumb img {
-      width: 100%;
-      display: block;
-    }
-    .thumb-label {
-      padding: 8px 10px 9px;
-      border-top: 1px solid rgba(30, 64, 175, 0.45);
-      background: linear-gradient(90deg, rgba(15,23,42,0.98), rgba(8,47,73,0.92));
-      font-size: 0.8rem;
-      color: #e5f3ff;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .thumb-label span:first-child {
-      font-weight: 600;
-    }
-    .thumb-label span:last-child {
-      color: rgba(226, 232, 240, 0.85);
-      font-size: 0.78rem;
+    /* Equal height for reference/custom images */
+    .card .image-row img {
+      height: 100%;
+      max-height: 330px;
+      object-fit: cover;
     }
 
     .psnr-container {
@@ -215,22 +185,6 @@
       gap: 14px;
     }
 
-    .tag-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 10px;
-    }
-    .tag {
-      padding: 4px 9px;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      font-size: 0.78rem;
-      color: var(--muted);
-      background: rgba(15, 23, 42, 0.9);
-    }
-
-    /* Navigation */
     nav {
       margin: 12px auto 28px;
       max-width: 720px;
@@ -261,14 +215,7 @@
       text-decoration: none;
       color: #e5e7eb;
     }
-    /* Force same-height images in Reference & Custom Images block */
-    .card .image-row img {
-      height: 100%;
-      max-height: 330px;
-      object-fit: cover;
-    }
 
-    /* Responsive */
     @media (max-width: 768px) {
       .two-column {
         grid-template-columns: minmax(0, 1fr);
@@ -283,10 +230,10 @@
   </style>
 </head>
 <body>
-  <main>
+<main>
+
     <header>
-      <div class="tagline">
-      </div>
+      <div class="tagline"></div>
       <h1>NeRF from 2D Images & Multi-view Lego</h1>
       <p>Fitting coordinate-based neural networks to single images and a multi-view Lego scene.</p>
       <p>All results and plots below are produced by my implementation.</p>
@@ -323,13 +270,13 @@
           <div class="image-row">
             <div class="image-col">
               <figure>
-                <img src="image/Viserperso1.png" alt="Personal frustum visualization 1" />
+                <img src="image/Viserperso1.png" />
                 <figcaption>Camera frustum visualization – view 1.</figcaption>
               </figure>
             </div>
             <div class="image-col">
               <figure>
-                <img src="image/Viserperso2.png" alt="Personal frustum visualization 2" />
+                <img src="image/Viserperso2.png" />
                 <figcaption>Camera frustum visualization – view 2.</figcaption>
               </figure>
             </div>
@@ -339,27 +286,35 @@
         <div class="stack">
           <h3>0.1 – Calibrating Your Camera</h3>
           <p>
-            I began by detecting ArUco markers in each of my calibration images using OpenCV’s built-in ArUco detector. For every image, I converted it to grayscale and applied the detector to extract the 2D pixel coordinates of the four corners of the printed marker. Since some frames contained motion blur or the marker was partially out of view, I discarded any images where no ArUco corners were detected to avoid corrupting the calibration process. This resulted in a reliable set of 2D corner positions that I paired with the known 3D coordinates of the marker corners on the printed tag. These 2D–3D correspondences form the foundation for estimating both intrinsic parameters and per-image camera poses later on.          </p>
-        </div>
-
-        <div class="stack">
-          <h3>0.2 – Capturing a 3D Object Scan</h3>
-          <p>
-            Using all successfully detected ArUco markers, I performed full camera calibration with OpenCV’s cv2.calibrateCamera function. This routine takes as input the 2D pixel coordinates of the detected marker corners in each image along with the known 3D geometry of the physical tag. The function returns estimates of the intrinsic matrix (which includes focal length and principal point) and a set of lens distortion coefficients modeling radial and tangential distortion. In addition to intrinsics and distortion, the calibration step also produces a rotation vector and translation vector for every calibration image. These extrinsics describe the position and orientation of the camera relative to the marker coordinate system. Since the ArUco tag defines a stable world origin in this setup, these extrinsics allow us to later convert each camera viewpoint into a consistent world-space coordinate frame.
+            I began by detecting ArUco markers in each calibration image using OpenCV’s detector,
+            discarding any images where markers were not detected. This established reliable
+            2D–3D correspondences for calibration.
           </p>
         </div>
 
         <div class="stack">
-          <h3>0.3 – Estimating Camera Pose</h3>
+          <h3>0.2 – Camera Calibration</h3>
           <p>
-            After estimating intrinsics, I computed the camera pose for every image of my captured object using OpenCV’s cv2.solvePnP function. For each object frame, I again detected the same ArUco marker, recovered its 2D pixel corner coordinates, and paired them with the known 3D coordinates of the marker in world space. Given these correspondences and the intrinsics computed in the previous step, solvePnP returns a rotation and translation describing where the camera is positioned relative to the marker. I then converted these rotation/translation parameters into full 4×4 camera-to-world transformation matrices, which are the format expected by NeRF. Importantly, I did not apply any additional normalization, scaling, or re-centering to the scene—the world frame is defined directly by the physical ArUco marker, and all camera poses remain consistent within that coordinate system.
+            Using the accumulated detections, I ran <code>calibrateCameraCharuco</code> to estimate
+            focal length, principal point, and lens distortion coefficients. I also obtained
+            per-image extrinsic matrices mapping camera coordinates to world space.
           </p>
         </div>
 
         <div class="stack">
-          <h3>0.4 – Undistorting images and creating a dataset</h3>
+          <h3>0.3 – Pose Estimation</h3>
           <p>
-            Before packaging the dataset for NeRF, I first undistorted each image using the calibrated intrinsics and distortion coefficients obtained earlier. I used OpenCV’s cv2.undistort along with cv2.getOptimalNewCameraMatrix to both correct lens distortion and automatically crop away invalid black borders introduced during undistortion. Because this cropping shifts the image origin, I also updated the intrinsic matrix’s principal point to reflect the new pixel coordinates. Once all images were undistorted and all camera poses were computed, I split the dataset into training, validation, and test subsets. Finally, I saved everything—undistorted RGB images, their corresponding camera-to-world matrices, and the focal length—into a single compressed .npz file. This file can be directly loaded by my NeRF implementation for training and novel-view rendering.
+            For my object images, I used <code>solvePnP</code> to compute per-frame camera pose from
+            ArUco detections, converted to camera-to-world matrices for later NeRF training.
+          </p>
+        </div>
+
+        <div class="stack">
+          <h3>0.4 – Undistortion & Dataset Export</h3>
+          <p>
+            I undistorted all images using <code>cv2.undistort</code>, cropped borders, updated the
+            intrinsics accordingly, and packaged everything into a <code>.npz</code> file containing
+            RGB images, c2w poses, and focal length.
           </p>
         </div>
       </div>
@@ -370,172 +325,94 @@
       <div class="section-header">
         <h2>Part 1 – Fitting a Neural Field to a Single 2D Image</h2>
         <p>
-          I first implemented a simple 2D neural field that directly maps pixel coordinates to RGB
-          values, in order to build intuition before moving on to full 3D NeRFs.
+          I implemented a coordinate-based 2D neural field that maps pixel coordinates to RGB
+          values, helping build intuition before moving to 3D NeRFs.
         </p>
       </div>
 
-      <!-- Model & Training Setup -->
       <div class="card two-column">
         <div>
-          <p class="pill-heading">Model &amp; Training Setup</p>
+          <p class="pill-heading">Model & Training Setup</p>
           <h3>MLP Architecture</h3>
           <p style="color: var(--muted);">
-            <!-- TODO: corriger avec ton architecture réelle -->
-            My 2D neural field is a fully-connected MLP that takes in sinusoidally encoded
-            (x, y) pixel coordinates and predicts normalized RGB colors.
+            The model uses sinusoidal positional encoding followed by a 4-layer MLP
+            with width 256, outputting RGB through a sigmoid.
           </p>
           <ul>
-            <li>Input: 2D pixel coordinate with positional encoding (L = 10).</li>
-            <li>Hidden layers: 4 fully-connected layers with ReLU activations.</li>
-            <li>Hidden width: 256 channels per layer.</li>
-            <li>Output layer: 3 channels with sigmoid to clamp colors to [0, 1].</li>
+            <li>Positional encoding L = 10</li>
+            <li>Width = 256</li>
+            <li>4 hidden layers (ReLU)</li>
+            <li>Training steps = 2000</li>
+            <li>Batch size = 10,000 pixels</li>
+            <li>Loss = MSE, Metric = PSNR</li>
           </ul>
         </div>
+
         <div class="card-subtle">
-          <p class="pill-heading">Hyperparameters</p>
-          <ul>
-            <!-- TODO: adapter aux valeurs exactes -->
-            <li>Batch size (pixels per iteration): 10,000</li>
-            <li>Training steps: 2,000 iterations</li>
-            <li>Optimizer: Adam, learning rate 0.01</li>
-            <li>Loss: Mean Squared Error (MSE) on RGB values</li>
-            <li>Metric: Peak Signal-to-Noise Ratio (PSNR) computed from MSE</li>
-          </ul>
-          <div class="tag-list">
-            <span class="tag">MLP</span>
-            <span class="tag">Positional Encoding</span>
-            <span class="tag">Image Fitting</span>
-          </div>
+          <p class="pill-heading">Input Images</p>
+          <p>
+            I trained the model on two scenes: the provided fox image, and a custom sunset
+            skatepark photograph. Their contrast in texture and lighting makes them ideal
+            for testing positional encoding and MLP capacity.
+          </p>
         </div>
       </div>
 
-      <!-- Reference & custom images -->
-      <section>
-        <div class="section-header" style="margin-top: 30px;">
-          <h3>Reference &amp; Custom Images</h3>
-          <p>
-            I trained the network both on the provided fox photograph and on one of my own images
-            of a skatepark at sunset to compare reconstructions across two very different scenes.
-          </p>
-        </div>
-
+      <section style="margin-top: 30px;">
         <div class="card">
           <div class="image-row">
             <div class="image-col">
               <figure>
-                <img src="image/fox.jpg" alt="Reference fox image" />
+                <img src="image/fox.jpg" />
                 <figcaption>Fox – original reference image.</figcaption>
               </figure>
             </div>
             <div class="image-col">
               <figure>
-                <img src="image/skate.png" alt="Custom skatepark image" />
-                <figcaption>Skatepark – custom image used for the second neural field.</figcaption>
+                <img src="image/skate.png" />
+                <figcaption>Skatepark – custom input image.</figcaption>
               </figure>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Positional Encoding & Width Sweep -->
-      <section>
-        <div class="section-header" style="margin-top: 30px;">
-          <h3>Positional Encoding &amp; Width Sweep</h3>
-          <p>
-            By varying the positional encoding frequency and hidden layer width, I observed how
-            model capacity and Fourier features control the level of sharpness and fine detail the
-            neural field can reproduce.
-          </p>
+      <section style="margin-top: 32px;">
+        <div class="section-header">
+          <h3>Hyperparameter Sweep Results</h3>
         </div>
 
-        <!-- Fox sweep -->
         <div class="card">
-          <p class="pill-heading">Fox – Width × Frequency Grid</p>
-          <div class="grid-2x2">
-            <!-- TODO: assurer le bon nom de fichier + PSNR pour chaque vignette -->
-            <div class="thumb">
-              <img src="fox_W128_L4.png" alt="Fox W=128, L=4" />
-              <div class="thumb-label">
-                <span>L = 4, Width = 128</span>
-                <span>PSNR: TODO dB</span>
-              </div>
-            </div>
-            <div class="thumb">
-              <img src="fox_W256_L4.png" alt="Fox W=256, L=4" />
-              <div class="thumb-label">
-                <span>L = 4, Width = 256</span>
-                <span>PSNR: TODO dB</span>
-              </div>
-            </div>
-            <div class="thumb">
-              <img src="fox_W128_L10.png" alt="Fox W=128, L=10" />
-              <div class="thumb-label">
-                <span>L = 10, Width = 128</span>
-                <span>PSNR: TODO dB</span>
-              </div>
-            </div>
-            <div class="thumb">
-              <img src="fox_W256_L10.png" alt="Fox W=256, L=10" />
-              <div class="thumb-label">
-                <span>L = 10, Width = 256</span>
-                <span>PSNR: TODO dB</span>
-              </div>
-            </div>
-          </div>
+          <figure>
+            <img src="part1_outputs/fox_hypergrid.png" />
+            <figcaption>Fox – Hyperparameter sweep.</figcaption>
+          </figure>
         </div>
 
-        <!-- Skate sweep -->
         <div class="card" style="margin-top: 18px;">
-          <p class="pill-heading">Skatepark – Width × Frequency Grid</p>
-          <div class="grid-2x2">
-            <div class="thumb">
-              <img src="skate_W128_L4.png" alt="Skate W=128, L=4" />
-              <div class="thumb-label">
-                <span>L = 4, Width = 128</span>
-                <span>PSNR: TODO dB</span>
-              </div>
-            </div>
-            <div class="thumb">
-              <img src="skate_W256_L4.png" alt="Skate W=256, L=4" />
-              <div class="thumb-label">
-                <span>L = 4, Width = 256</span>
-                <span>PSNR: TODO dB</span>
-              </div>
-            </div>
-            <div class="thumb">
-              <img src="skate_W128_L10.png" alt="Skate W=128, L=10" />
-              <div class="thumb-label">
-                <span>L = 10, Width = 128</span>
-                <span>PSNR: TODO dB</span>
-              </div>
-            </div>
-            <div class="thumb">
-              <img src="skate_W256_L10.png" alt="Skate W=256, L=10" />
-              <div class="thumb-label">
-                <span>L = 10, Width = 256</span>
-                <span>PSNR: TODO dB</span>
-              </div>
-            </div>
-          </div>
+          <figure>
+            <img src="part1_outputs/skate_hypergrid.png" />
+            <figcaption>Skatepark – Hyperparameter sweep.</figcaption>
+          </figure>
         </div>
       </section>
 
-      <!-- PSNR curves -->
-      <section>
-        <div class="section-header" style="margin-top: 30px;">
-          <h3>PSNR Curves</h3>
-          <p>
-            The PSNR curves below summarize the training dynamics for both the fox and skatepark
-            neural fields, showing loss dropping quickly at the beginning and then gradually
-            plateauing as the networks saturate their capacity.
-          </p>
+      <section style="margin-top: 32px;">
+        <div class="section-header">
+          <h3>Training Curves</h3>
         </div>
 
-        <div class="card psnr-container">
+        <div class="card">
           <figure>
-            <img src="part1_psnr_curves.png" alt="PSNR curves for fox and skate images" />
-            <figcaption>Training PSNR over iterations for both scenes.</figcaption>
+            <img src="part1_outputs/fox_training_curves.png" />
+            <figcaption>Fox – Loss and PSNR curves.</figcaption>
+          </figure>
+        </div>
+
+        <div class="card" style="margin-top: 18px;">
+          <figure>
+            <img src="part1_outputs/skate_training_curves.png" />
+            <figcaption>Skatepark – Loss and PSNR curves.</figcaption>
           </figure>
         </div>
       </section>
@@ -546,9 +423,8 @@
       <div class="section-header">
         <h2>Part 2 – Fit a Neural Radiance Field from Multi-view Images</h2>
         <p>
-          I then implemented the full NeRF pipeline on the Lego dataset: generating camera rays,
-          sampling points along each ray, predicting density and color with a NeRF MLP, and
-          volume-rendering the outputs to reconstruct held-out views.
+          I implemented the full NeRF pipeline: ray generation, sampling, density/color
+          prediction, and volume rendering on the Lego dataset.
         </p>
       </div>
 
@@ -556,204 +432,95 @@
         <div class="stack">
           <h3>2.1 – Create Rays from Cameras</h3>
           <p>
-            I converted pixel centers to world-space rays by inverting the camera intrinsics,
-            transforming points with each camera&apos;s pose, and normalizing the resulting
-            direction vectors. This produced per-pixel ray origins and directions for every view.
+            Pixel centers were converted to 3D rays using intrinsics inversion and camera pose
+            transforms.
           </p>
         </div>
 
         <div class="stack">
           <h3>2.2 – Sampling</h3>
           <p>
-            For each ray, I sampled depth values between near and far bounds using stratified
-            sampling. These depth values were combined with the ray origins and directions to
-            generate 3D sample positions, which are then fed into the NeRF network.
+            Stratified depth sampling generated evenly spaced 3D sample points along each ray.
           </p>
         </div>
 
         <div class="stack">
           <h3>2.3 – Putting the Dataloading All Together</h3>
           <p>
-            To avoid recomputing ray geometry every iteration, I precomputed all rays once and
-            stored them in a compact structure. The training dataloader then simply gathers
-            batches of ray indices and their associated RGB targets.
+            Rays and RGB targets were precomputed into a compact structure for fast training.
           </p>
         </div>
 
         <div class="stack">
           <h3>2.4 – Neural Radiance Field</h3>
           <p>
-            The NeRF model applies high-frequency positional encoding to 3D positions and view
-            directions, processes positions through several ReLU layers with a skip connection,
-            and produces density and color in two separate heads following the original NeRF
-            design.
+            NeRF uses high-frequency positional encoding, a skip-connected MLP, and separate
+            density/color heads.
           </p>
         </div>
 
         <div class="stack">
           <h3>2.5 – Volume Rendering</h3>
           <p>
-            Densities are converted into alpha values, accumulated into transmittance along each
-            ray, and used to blend the predicted colors. The implementation also returns per-sample
-            weights so that the loss directly reflects the rendered pixel intensities.
+            Sigmas were converted into alpha values and composited using accumulated
+            transmittance to produce final pixel colors.
           </p>
         </div>
       </div>
 
-      <!-- Ray & Sample Visualizations -->
       <section style="margin-top: 32px;">
         <div class="section-header">
-          <h3>Ray &amp; Sample Visualizations</h3>
-          <p>
-            To debug the geometry, I rendered a subset of rays and their sampled points in world
-            space for a single camera. Visualizing these rays overlaid with camera frustums helped
-            verify that near/far planes and pose transforms were correctly configured.
-          </p>
+          <h3>Ray & Sample Visualizations</h3>
         </div>
 
         <div class="card">
           <div class="image-row">
             <div class="image-col">
               <figure>
-                <img src="ViserLego1.png" alt="Lego ray visualization 1" />
-                <figcaption>Ray and sample visualization – view 1.</figcaption>
+                <img src="image/ViserLego1.png" />
+                <figcaption>Rays & samples – view 1.</figcaption>
               </figure>
             </div>
             <div class="image-col">
               <figure>
-                <img src="ViserLego2.png" alt="Lego ray visualization 2" />
-                <figcaption>Ray and sample visualization – view 2.</figcaption>
+                <img src="image/ViserLego2.png" />
+                <figcaption>Rays & samples – view 2.</figcaption>
               </figure>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Training progression Lego -->
       <section style="margin-top: 32px;">
         <div class="section-header">
           <h3>Training Progression – Lego</h3>
-          <p>
-            Periodic renders from the validation set show NeRF gradually sharpening the Lego
-            model: early iterations only capture coarse structure, while later ones refine the
-            lighting and brick details.
-          </p>
         </div>
 
         <div class="card">
           <p class="pill-heading">Lego – Training Steps</p>
           <figure>
-            <!-- TODO: cette image doit être une grille de vignettes (it & PSNR) -->
-            <img src="Lego_Training_Steps.png" alt="Lego training progression" />
-            <figcaption>
-              Validation renders at different iterations, annotated with iteration number and PSNR.
-            </figcaption>
+            <img src="image/Lego_Training_Steps.png" />
+            <figcaption>Validation renders at different training iterations.</figcaption>
           </figure>
         </div>
       </section>
 
-      <!-- Validation PSNR + Spherical render -->
       <section style="margin-top: 32px;">
         <div class="section-header">
-          <h3>Validation PSNR &amp; Spherical Render</h3>
-          <p>
-            I monitored PSNR on held-out Lego views and also rendered a full spherical trajectory
-            around the scene to visualize the final reconstructed 3D geometry.
-          </p>
+          <h3>Validation PSNR & Spherical Render</h3>
         </div>
 
         <div class="card two-column">
           <div>
             <figure>
-              <!-- TODO: placer la courbe de PSNR de validation -->
-              <img src="Lego_Validation_PSNR.png" alt="Lego validation PSNR curve" />
-              <figcaption>Validation PSNR over training iterations.</figcaption>
+              <img src="image/Lego_Validation_PSNR.png" />
+              <figcaption>Validation PSNR over iterations.</figcaption>
             </figure>
           </div>
           <div>
             <figure>
-              <!-- TODO: une frame représentative ou un sprite sheet du gif -->
-              <img src="image/lego_orbit.gif" alt="Lego spherical render orbit" />
-              <figcaption>Final spherical render around the Lego scene.</figcaption>
-            </figure>
-          </div>
-        </div>
-      </section>
-
-      <!-- Part 2.6 – Own data -->
-      <section style="margin-top: 32px;">
-        <div class="section-header">
-          <h3>Part 2.6 – Training with your own data</h3>
-          <p>
-            <!-- TODO: remplacer avec tes vraies valeurs et ton objet -->
-            After validating the pipeline on the Lego splits, I re-used the same dataloading,
-            sampling, and rendering stack on my own multi-view captures of a personal object.
-            Increasing the number of samples per ray and tightening the near/far planes to match
-            the tabletop improved stability, and PSNR quickly climbed to around <strong>XX&nbsp;dB</strong>
-            before slowly flattening.
-          </p>
-        </div>
-
-        <!-- Training configuration -->
-        <div class="card">
-          <p class="pill-heading">Training Configuration</p>
-          <div class="card-subtle">
-            <h4 style="margin: 0 0 8px; color: var(--heading);">Configuration</h4>
-            <ul>
-              <!-- TODO: adapter aux paramètres réels -->
-              <li><code>num_samples = 128</code> per ray for higher-frequency detail.</li>
-              <li><code>near = 0.35</code>, <code>far = 0.6</code> to tightly bound the tabletop scene.</li>
-              <li>
-                <code>batch_size = 10,000</code> rays, <code>learning_rate = 5e-4</code> (Adam),
-                <code>num_iters = 40,000</code>.
-              </li>
-              <li>
-                Model width kept at 512 channels, trained on the original (slightly distorted)
-                phone images rather than pre-undistorted exports.
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <!-- Loss / PSNR curves & personal training steps -->
-        <div class="card" style="margin-top: 22px;">
-          <div class="stack">
-            <p class="pill-heading">Training Curves</p>
-            <div class="image-row">
-              <div class="image-col">
-                <figure>
-                  <!-- TODO: courbe MSE / loss -->
-                  <img src="Personal_Loss_Curve.png" alt="Training loss over iterations" />
-                  <figcaption>Training loss over time.</figcaption>
-                </figure>
-              </div>
-              <div class="image-col">
-                <figure>
-                  <!-- TODO: courbe PSNR validation -->
-                  <img src="Personal_Validation_PSNR.png" alt="Validation PSNR over iterations" />
-                  <figcaption>Validation PSNR curve on held-out views.</figcaption>
-                </figure>
-              </div>
-            </div>
-          </div>
-
-          <div class="stack" style="margin-top: 24px;">
-            <p class="pill-heading">Personal Training Steps</p>
-            <figure>
-              <!-- TODO: grille de vignettes (images + texte Iter / PSNR) -->
-              <img src="Personal_Training_Steps.png" alt="Training steps for personal data" />
-              <figcaption>
-                Snapshots at different iterations for my own scene, annotated with PSNR.
-              </figcaption>
-            </figure>
-          </div>
-
-          <div class="stack" style="margin-top: 24px;">
-            <p class="pill-heading">Personal Spherical Render</p>
-            <figure>
-              <!-- TODO: GIF d'orbite autour de ton objet -->
-              <img src="Personal_Spherical_Render.gif" alt="Spherical render of personal data" />
-              <figcaption>Orbit animation around my reconstructed object.</figcaption>
+              <img src="image/lego_orbit.gif" />
+              <figcaption>Final spherical orbit around the Lego scene.</figcaption>
             </figure>
           </div>
         </div>
@@ -762,10 +529,10 @@
 
     <footer style="margin-top: 40px; padding-top: 16px; border-top: 1px solid rgba(148,163,184,0.25); font-size: 0.8rem; color: var(--muted);">
       <p>
-        <!-- Tu peux mettre ton nom / numéro étudiant ici -->
-        CS180 Project 4 – Neural Radiance Fields · <!-- TODO: Your Name -->
+        CS180 Project 4 – Neural Radiance Fields · Your Name Here
       </p>
     </footer>
-  </main>
+
+</main>
 </body>
 </html>
