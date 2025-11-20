@@ -261,6 +261,12 @@
       text-decoration: none;
       color: #e5e7eb;
     }
+    /* Force same-height images in Reference & Custom Images block */
+    .card .image-row img {
+      height: 100%;
+      max-height: 330px;
+      object-fit: cover;
+    }
 
     /* Responsive */
     @media (max-width: 768px) {
