@@ -286,35 +286,28 @@
         <div class="stack">
           <h3>0.1 – Calibrating Your Camera</h3>
           <p>
-            I began by detecting ArUco markers in each calibration image using OpenCV’s detector,
-            discarding any images where markers were not detected. This established reliable
-            2D–3D correspondences for calibration.
+            I began by detecting ArUco markers in each of my calibration images using OpenCV’s built-in ArUco detector. For every image, I converted it to grayscale and applied the detector to extract the 2D pixel coordinates of the four corners of the printed marker. Since some frames contained motion blur or the marker was partially out of view, I discarded any images where no ArUco corners were detected to avoid corrupting the calibration process. This resulted in a reliable set of 2D corner positions that I paired with the known 3D coordinates of the marker corners on the printed tag. These 2D–3D correspondences form the foundation for estimating both intrinsic parameters and per-image camera poses later on. 
           </p>
         </div>
 
         <div class="stack">
           <h3>0.2 – Camera Calibration</h3>
           <p>
-            Using the accumulated detections, I ran <code>calibrateCameraCharuco</code> to estimate
-            focal length, principal point, and lens distortion coefficients. I also obtained
-            per-image extrinsic matrices mapping camera coordinates to world space.
+            Using all successfully detected ArUco markers, I performed full camera calibration with OpenCV’s cv2.calibrateCamera function. This routine takes as input the 2D pixel coordinates of the detected marker corners in each image along with the known 3D geometry of the physical tag. The function returns estimates of the intrinsic matrix (which includes focal length and principal point) and a set of lens distortion coefficients modeling radial and tangential distortion. In addition to intrinsics and distortion, the calibration step also produces a rotation vector and translation vector for every calibration image. These extrinsics describe the position and orientation of the camera relative to the marker coordinate system. Since the ArUco tag defines a stable world origin in this setup, these extrinsics allow us to later convert each camera viewpoint into a consistent world-space coordinate frame.
           </p>
         </div>
 
         <div class="stack">
           <h3>0.3 – Pose Estimation</h3>
           <p>
-            For my object images, I used <code>solvePnP</code> to compute per-frame camera pose from
-            ArUco detections, converted to camera-to-world matrices for later NeRF training.
+            After estimating intrinsics, I computed the camera pose for every image of my captured object using OpenCV’s cv2.solvePnP function. For each object frame, I again detected the same ArUco marker, recovered its 2D pixel corner coordinates, and paired them with the known 3D coordinates of the marker in world space. Given these correspondences and the intrinsics computed in the previous step, solvePnP returns a rotation and translation describing where the camera is positioned relative to the marker. I then converted these rotation/translation parameters into full 4×4 camera-to-world transformation matrices, which are the format expected by NeRF. Importantly, I did not apply any additional normalization, scaling, or re-centering to the scene—the world frame is defined directly by the physical ArUco marker, and all camera poses remain consistent within that coordinate system.
           </p>
         </div>
 
         <div class="stack">
           <h3>0.4 – Undistortion & Dataset Export</h3>
           <p>
-            I undistorted all images using <code>cv2.undistort</code>, cropped borders, updated the
-            intrinsics accordingly, and packaged everything into a <code>.npz</code> file containing
-            RGB images, c2w poses, and focal length.
+            Before packaging the dataset for NeRF, I first undistorted each image using the calibrated intrinsics and distortion coefficients obtained earlier. I used OpenCV’s cv2.undistort along with cv2.getOptimalNewCameraMatrix to both correct lens distortion and automatically crop away invalid black borders introduced during undistortion. Because this cropping shifts the image origin, I also updated the intrinsic matrix’s principal point to reflect the new pixel coordinates. Once all images were undistorted and all camera poses were computed, I split the dataset into training, validation, and test subsets. Finally, I saved everything—undistorted RGB images, their corresponding camera-to-world matrices, and the focal length—into a single compressed .npz file. This file can be directly loaded by my NeRF implementation for training and novel-view rendering.
           </p>
         </div>
       </div>
