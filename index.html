@@ -427,38 +427,35 @@
         <div class="stack">
           <h3>2.1 – Create Rays from Cameras</h3>
           <p>
-            Pixel centers were converted to 3D rays using intrinsics inversion and camera pose
-            transforms.
+            In this section, I converted pixel coordinates from each Lego training image into 3D rays. Using the intrinsic focal length and each camera-to-world transformation matrix, I computed a ray origin at the camera center and a normalized direction for every pixel. I followed the pinhole camera model precisely and ensured that the coordinate convention matched the dataset (positive z forward). This step produces a dense grid of rays per image, which becomes the foundation for all subsequent sampling and rendering.
           </p>
         </div>
 
         <div class="stack">
           <h3>2.2 – Sampling</h3>
           <p>
-            Stratified depth sampling generated evenly spaced 3D sample points along each ray.
+            Once the rays were generated, I performed stratified depth sampling along each ray. For every training iteration, I sampled a fixed number of points between a near and far bound that cover the Lego object. Each sample point stores its 3D world coordinate and the ray direction. My implementation uses uniform depth spacing, which is simple and stable for this dataset. These sampled locations are the exact points where the NeRF MLP will predict density and color.
           </p>
         </div>
 
         <div class="stack">
           <h3>2.3 – Putting the Dataloading All Together</h3>
           <p>
-            Rays and RGB targets were precomputed into a compact structure for fast training.
+            To speed up training, I precomputed all rays and all ground-truth RGB colors for every training image. These were flattened into a large dataset of millions of rays. During training, I randomly draw batches of rays instead of sampling full images at once. This mimics the original NeRF training loop and makes optimization much faster. The dataloader returns matched triplets: ray origin, ray direction, and target RGB.
           </p>
         </div>
 
         <div class="stack">
           <h3>2.4 – Neural Radiance Field</h3>
           <p>
-            NeRF uses high-frequency positional encoding, a skip-connected MLP, and separate
-            density/color heads.
+            My NeRF model predicts both volume density and emitted color at every sampled 3D point. I used positional encoding to allow the network to capture high-frequency details, applying a high-frequency encoding for 3D positions and a lower-frequency one for ray directions. The network follows the classic NeRF structure: a deeper MLP for density + features, and a second branch that uses both features and the encoded viewing direction to output RGB values. A sigmoid is applied to keep colors in [0,1].
           </p>
         </div>
 
         <div class="stack">
           <h3>2.5 – Volume Rendering</h3>
           <p>
-            Sigmas were converted into alpha values and composited using accumulated
-            transmittance to produce final pixel colors.
+            Finally, I implemented the NeRF volume-rendering equation. For each ray, densities are converted into alpha values, cumulative transmittance is computed, and RGBs from all sample points are combined using the standard NeRF weighting formula. The resulting single color becomes the predicted pixel value. This is compared to ground-truth RGB using MSE loss during training. After training, I reused the exact renderer to generate validation views and a full spherical orbit GIF.
           </p>
         </div>
       </div>
@@ -495,7 +492,7 @@
           <p class="pill-heading">Lego – Training Steps</p>
           <figure>
             <img src="image/Lego_Training_Steps.png" />
-            <figcaption>Validation renders at different training iterations.</figcaption>
+            <figcaption>The training steps are blurrier than I expected. With more iterations or a larger model, the refinement would likely improve, but even so, the progression still shows the network gradually learning the scene.</figcaption>
           </figure>
         </div>
       </section>
