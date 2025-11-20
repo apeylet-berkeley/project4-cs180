@@ -300,7 +300,7 @@
     <!-- ===================== PART 0 ===================== -->
     <section id="part0">
       <div class="section-header">
-        <h2>Part 0 – Data Capture & Calibration</h2>
+        <h2>Part 0 – Calibrating Your Camera and Capturing a 3D Scan</h2>
         <p>
           This section summarizes how I captured my own images, estimated camera parameters,
           and validated that the calibrated frustums were consistent in 3D.
@@ -308,11 +308,9 @@
       </div>
 
       <div class="card stack">
-        <!-- Part 0 overview / resume -->
         <div class="stack">
           <h3>0.0 – Overview</h3>
           <p>
-            <!-- TODO: adapter avec ton texte -->
             I captured a set of photos of my scene, detected a Charuco board in each image, and
             used OpenCV to recover camera intrinsics and per-image poses. I then verified the
             calibration visually by rendering the camera frustums and sample rays in a shared
@@ -322,7 +320,6 @@
           <div class="image-row">
             <div class="image-col">
               <figure>
-                <!-- TODO: mettre le bon nom de fichier -->
                 <img src="image/ViserPerso1.png" alt="Personal frustum visualization 1" />
                 <figcaption>Camera frustum visualization – view 1.</figcaption>
               </figure>
@@ -336,11 +333,9 @@
           </div>
         </div>
 
-        <!-- Part 0.1 – 0.4 text blocks -->
         <div class="stack">
-          <h3>0.1 – Charuco Detection</h3>
+          <h3>0.1 – Calibrating Your Camera</h3>
           <p>
-            <!-- TODO: décrire précisément ce que tu as fait -->
             I used OpenCV&apos;s ArUco and Charuco utilities to detect board corners in each
             calibration image, discarding frames where too few markers were visible. This provided
             a robust set of 2D–3D correspondences for camera calibration.
@@ -348,9 +343,8 @@
         </div>
 
         <div class="stack">
-          <h3>0.2 – Camera Calibration</h3>
+          <h3>0.2 – Capturing a 3D Object Scan</h3>
           <p>
-            <!-- TODO -->
             With the accumulated Charuco detections, I ran <code>calibrateCameraCharuco</code> to
             estimate the focal length, principal point, and lens distortion coefficients. I also
             recorded a per-image extrinsic matrix mapping camera coordinates to world space.
@@ -358,9 +352,8 @@
         </div>
 
         <div class="stack">
-          <h3>0.3 – Pose Refinement & Normalization</h3>
+          <h3>0.3 – Estimating Camera Pose</h3>
           <p>
-            <!-- TODO -->
             I normalized the scene so that the cameras and object live at a convenient scale,
             re-centering the world frame around the Lego model and ensuring that near/far clipping
             planes bracket the geometry tightly.
@@ -368,9 +361,8 @@
         </div>
 
         <div class="stack">
-          <h3>0.4 – Exporting a NeRF-ready Dataset</h3>
+          <h3>0.4 – Undistorting images and creating a dataset</h3>
           <p>
-            <!-- TODO -->
             Finally, I resized the images to 200×200, split them into train/validation views, and
             saved everything (images, camera-to-world matrices, and intrinsics) to a compressed
             <code>.npz</code> file that my NeRF implementation can load directly.
@@ -548,7 +540,6 @@
 
         <div class="card psnr-container">
           <figure>
-            <!-- TODO: mettre le vrai nom de l'image des courbes -->
             <img src="part1_psnr_curves.png" alt="PSNR curves for fox and skate images" />
             <figcaption>Training PSNR over iterations for both scenes.</figcaption>
           </figure>
@@ -559,7 +550,7 @@
     <!-- ===================== PART 2 ===================== -->
     <section id="part2">
       <div class="section-header">
-        <h2>Part 2 – NeRF from Multi-view Lego Images</h2>
+        <h2>Part 2 – Fit a Neural Radiance Field from Multi-view Images</h2>
         <p>
           I then implemented the full NeRF pipeline on the Lego dataset: generating camera rays,
           sampling points along each ray, predicting density and color with a NeRF MLP, and
@@ -567,12 +558,10 @@
         </p>
       </div>
 
-      <!-- Part 2.x textual descriptions -->
       <div class="card stack">
         <div class="stack">
-          <h3>2.1 – Ray Generation from Cameras</h3>
+          <h3>2.1 – Create Rays from Cameras</h3>
           <p>
-            <!-- TODO -->
             I converted pixel centers to world-space rays by inverting the camera intrinsics,
             transforming points with each camera&apos;s pose, and normalizing the resulting
             direction vectors. This produced per-pixel ray origins and directions for every view.
@@ -580,9 +569,8 @@
         </div>
 
         <div class="stack">
-          <h3>2.2 – Sampling along Rays</h3>
+          <h3>2.2 – Sampling</h3>
           <p>
-            <!-- TODO -->
             For each ray, I sampled depth values between near and far bounds using stratified
             sampling. These depth values were combined with the ray origins and directions to
             generate 3D sample positions, which are then fed into the NeRF network.
@@ -590,9 +578,8 @@
         </div>
 
         <div class="stack">
-          <h3>2.3 – Rays Data &amp; Dataloader</h3>
+          <h3>2.3 – Putting the Dataloading All Together</h3>
           <p>
-            <!-- TODO -->
             To avoid recomputing ray geometry every iteration, I precomputed all rays once and
             stored them in a compact structure. The training dataloader then simply gathers
             batches of ray indices and their associated RGB targets.
@@ -600,9 +587,8 @@
         </div>
 
         <div class="stack">
-          <h3>2.4 – NeRF Network Architecture</h3>
+          <h3>2.4 – Neural Radiance Field</h3>
           <p>
-            <!-- TODO -->
             The NeRF model applies high-frequency positional encoding to 3D positions and view
             directions, processes positions through several ReLU layers with a skip connection,
             and produces density and color in two separate heads following the original NeRF
@@ -613,7 +599,6 @@
         <div class="stack">
           <h3>2.5 – Volume Rendering</h3>
           <p>
-            <!-- TODO -->
             Densities are converted into alpha values, accumulated into transmittance along each
             ray, and used to blend the predicted colors. The implementation also returns per-sample
             weights so that the loss directly reflects the rendered pixel intensities.
@@ -704,7 +689,7 @@
       <!-- Part 2.6 – Own data -->
       <section style="margin-top: 32px;">
         <div class="section-header">
-          <h3>Part 2.6 – Training on My Own Captured Data</h3>
+          <h3>Part 2.6 – Training with your own data</h3>
           <p>
             <!-- TODO: remplacer avec tes vraies valeurs et ton objet -->
             After validating the pipeline on the Lego splits, I re-used the same dataloading,
